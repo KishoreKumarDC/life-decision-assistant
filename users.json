@@ -1,0 +1,32 @@
+{
+    "srinivasrahul838@gmail.com": {
+        "name": "Rahul ",
+        "password": "Rahul@838"
+    },
+    "srinivasrahul8171@gmail.com": {
+        "name": "neha",
+        "password": "Rahul@8171"
+    },
+    "nisarganishu948@gmail.com": {
+        "name": "Nisarga B  R",
+        "password": "433cs20038"
+    },
+    "harshita@gmail.com": {
+        "name": "harshitha",
+        "password": "Harshi@2006"
+    },
+    "kishorekumardc2004@gmail.com": {
+        "name": "Kishor",
+        "password": "1ah23cs405"
+    },
+    "kishorkumardc46@gmail.com": {
+        "name": "Kishu",
+        "password": "25122004",
+        "provider": "email"
+    },
+    "kishhuu46@gmail.com": {
+        "name": "kishu",
+        "password": "google_user",
+        "provider": "google"
+    }
+}

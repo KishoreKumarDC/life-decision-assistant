@@ -1,0 +1,167 @@
+body{
+
+margin:0;
+font-family:Segoe UI;
+background:#070707;
+color:white;
+display:flex;
+
+}
+
+/* LIGHT MODE */
+
+.light{
+background:#f5f5f5;
+color:black;
+}
+
+.light .sidebar{
+background:white;
+}
+
+.light .tool-card{
+background:white;
+color:black;
+border:1px solid #ddd;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+
+width:230px;
+height:100vh;
+background:#111;
+padding:30px;
+display:flex;
+flex-direction:column;
+
+}
+
+.logo{
+
+color:red;
+margin-bottom:40px;
+
+}
+
+/* MENU */
+
+.menu-item{
+
+text-decoration:none;
+color:white;
+padding:12px;
+margin-bottom:10px;
+border-radius:6px;
+transition:0.3s;
+
+}
+
+.menu-item:hover{
+
+background:red;
+
+}
+
+/* MAIN */
+
+.main-area{
+
+flex:1;
+padding:40px;
+
+}
+
+/* TOPBAR */
+
+.topbar{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:40px;
+
+}
+
+.mode-btn{
+
+padding:8px 15px;
+border:none;
+background:#222;
+color:white;
+border-radius:6px;
+cursor:pointer;
+
+}
+
+.mode-btn:hover{
+
+background:red;
+
+}
+
+.logout-btn{
+
+background:red;
+padding:8px 15px;
+text-decoration:none;
+color:white;
+border-radius:6px;
+margin-left:10px;
+
+}
+
+/* TOOL GRID */
+
+.tool-grid{
+
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:30px;
+
+}
+
+/* TOOL CARD */
+
+.tool-card{
+
+background:#111;
+padding:30px;
+border-radius:10px;
+text-decoration:none;
+color:white;
+border:1px solid red;
+transition:0.3s;
+
+}
+
+.tool-card:hover{
+
+transform:scale(1.05);
+background:red;
+box-shadow:0 0 20px red;
+
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+.tool-grid{
+grid-template-columns:repeat(2,1fr);
+}
+
+}
+
+@media(max-width:600px){
+
+.sidebar{
+display:none;
+}
+
+.tool-grid{
+grid-template-columns:1fr;
+}
+
+}
