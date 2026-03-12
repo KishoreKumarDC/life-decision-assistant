@@ -28,19 +28,43 @@ app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
 USER_FILE = "users.json"
+import os
+from google_auth_oauthlib.flow import Flow
 
-GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-flow = Flow.from_client_secrets_file(
-    GOOGLE_CLIENT_SECRETS_FILE,
+client_config = {
+    "web": {
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token"
+    }
+}
+
+flow = Flow.from_client_config(
+    client_config,
     scopes=[
         "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/userinfo.email",
-        "openid",
+        "openid"
     ],
-    # redirect_uri="http://127.0.0.1:5000/google/callback"
     redirect_uri="https://life-decision-assistant.onrender.com/google/callback"
 )
+# GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"
+
+
+# flow = Flow.from_client_secrets_file(
+#     GOOGLE_CLIENT_SECRETS_FILE,
+#     scopes=[
+#         "https://www.googleapis.com/auth/userinfo.profile",
+#         "https://www.googleapis.com/auth/userinfo.email",
+#         "openid",
+#     ],
+#     # redirect_uri="http://127.0.0.1:5000/google/callback"
+#     redirect_uri="https://life-decision-assistant.onrender.com/google/callback"
+# )
 
 # -------------------------------
 # USER DATABASE FUNCTIONS
