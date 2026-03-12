@@ -50,7 +50,7 @@ flow = Flow.from_client_config(
         "https://www.googleapis.com/auth/userinfo.email",
         "openid"
     ],
-    redirect_uri="https://life-decision-assistant.onrender.com/google/callback"
+    redirect_uri="https://life-decision-assistant-4wm1.onrender.com/google/callback"
 )
 # GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"
 
