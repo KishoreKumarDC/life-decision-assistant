@@ -239,6 +239,156 @@ padding-left:10px
 color:#ff4444
 }
 
+.history-frame{
+position:fixed;
+right:0;
+top:0;
+width:260px;
+height:100vh;
+border:none;
+z-index:999;
+}
+
+.history-float{
+position:fixed;
+right:20px;
+bottom:20px;
+width:55px;
+height:55px;
+border-radius:50%;
+border:none;
+background:linear-gradient(solid rgba(212,175,55,.3),#d4af37);
+color:black;
+font-size:20px;
+cursor:pointer;
+z-index:99999;
+box-shadow:0 0 15px rgba(212,175,55,0.7);
+}
+
+.history-panel{
+position:fixed;
+top:0;
+right:-380px;
+width:380px;
+height:100vh;
+padding:20px;
+overflow-y:auto;
+
+background:
+linear-gradient(180deg,
+rgba(0,0,0,0.95),
+rgba(15,15,15,0.97),
+rgba(0,0,0,0.98));
+
+border-left:1px solid rgba(212,175,55,0.4);
+
+backdrop-filter:blur(14px);
+
+box-shadow:
+-10px 0 40px rgba(212,175,55,0.15);
+
+transition:0.5s cubic-bezier(.77,0,.18,1);
+
+z-index:9999;
+}
+
+.history-panel.open{
+right:0;
+}
+
+.history-panel button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:bold;
+margin-top:10px;
+
+background:
+linear-gradient(145deg,#FFD700,#D4AF37);
+
+color:#111;
+
+box-shadow:
+0 0 15px rgba(212,175,55,0.6);
+
+transition:0.3s;
+}
+
+.history-panel button:hover{
+transform:scale(1.05);
+box-shadow:
+0 0 25px rgba(255,215,0,0.9);
+}
+
+#historyList li{
+padding:14px;
+margin-bottom:12px;
+border-radius:12px;
+
+background:
+linear-gradient(145deg,
+rgba(212,175,55,0.08),
+rgba(255,255,255,0.02));
+
+border:1px solid rgba(212,175,55,0.2);
+
+font-size:13px;
+line-height:1.5;
+
+transition:0.3s;
+}
+
+#historyList li:hover{
+transform:translateX(5px);
+background:
+linear-gradient(145deg,
+rgba(212,175,55,0.2),
+rgba(0,0,0,0.3));
+
+box-shadow:0 0 15px rgba(212,175,55,0.3);
+}
+
+.history-panel h3{
+text-align:center;
+color:#c1c0bf;
+letter-spacing:1px;
+margin-bottom:20px;
+text-shadow:0 0 10px rgba(255,215,0,0.6);
+}
+
+.history-toggle{
+position:fixed;
+right:25px;
+bottom:25px;
+width:65px;
+height:65px;
+border-radius:50%;
+border:none;
+cursor:pointer;
+font-size:24px;
+color:#111;
+
+background:
+linear-gradient(145deg,#FFD700,#D4AF37,#B8962E);
+
+box-shadow:
+0 0 20px rgba(212,175,55,0.6),
+0 0 40px rgba(212,175,55,0.3),
+inset 0 0 10px rgba(255,255,255,0.5);
+
+transition:0.4s;
+z-index:10000;
+}
+
+.history-toggle:hover{
+transform:scale(1.12) rotate(8deg);
+box-shadow:
+0 0 25px rgba(255,215,0,0.9),
+0 0 60px rgba(212,175,55,0.5);
+}
+
 </style>
 </head>
 
@@ -273,6 +423,8 @@ color:#ff4444
 <iframe id="skillgap" src="/skillgap"></iframe>
 <iframe id="comparison" src="/comparison"></iframe>
 <iframe id="chatbot" src="/chatbot"></iframe>
+<iframe src="/history" class="history-frame"></iframe>
+
 
 </div>
 
@@ -313,6 +465,11 @@ color:#ff4444
 </div>
 
 <script>
+
+
+function openHistory(){
+window.open("/history","history","width=350,height=600")
+}
 
 /* BOOT */
 
@@ -405,7 +562,67 @@ draw()
 
 }
 
-</script>
 
+
+function toggleHistory(){
+
+let panel = document.getElementById("historyPanel")
+
+panel.classList.toggle("open")
+
+if(panel.classList.contains("open")){
+loadHistory()
+}
+
+}
+
+function loadHistory(){
+
+fetch("/get_history")
+.then(res=>res.json())
+.then(data=>{
+
+let list=document.getElementById("historyList")
+list.innerHTML=""
+
+data.reverse().forEach(item=>{
+
+let li=document.createElement("li")
+
+li.innerHTML = `
+<b>${item.tool}</b><br>
+${item.input}<br>
+<small>${item.time}</small>
+<hr>
+`
+
+list.appendChild(li)
+
+})
+
+})
+
+}
+
+function clearHistory(){
+
+fetch("/clear_history",{method:"POST"})
+.then(()=>loadHistory())
+
+}
+
+
+</script>
+<div id="historyPanel" class="history-panel">
+
+<h3>🕘 Activity History</h3>
+
+<ul id="historyList"></ul>
+
+<button onclick="clearHistory()">Clear</button>
+
+</div>
+
+<button class="history-toggle" onclick="toggleHistory()">🕘</button>
 </body>
 </html>

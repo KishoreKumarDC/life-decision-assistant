@@ -10,6 +10,8 @@ import requests
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from flask import Flask, session, redirect, url_for, request,flash
+import sqlite3
+from datetime import datetime
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -24,8 +26,33 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+def init_db():
+
+    import sqlite3
+
+    conn = sqlite3.connect("history.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS history(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT,
+        tool TEXT,
+        input TEXT,
+        time TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+    print("✅ HISTORY TABLE READY")
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+init_db()
+
+
 
 USER_FILE = "users.json"
 import os
@@ -51,20 +78,9 @@ flow = Flow.from_client_config(
         "openid"
     ],
     redirect_uri="https://life-decision-assistant-4wm1.onrender.com/google/callback"
+    # redirect_uri="http://127.0.0.1:5000/google/callback"
+
 )
-# GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"
-
-
-# flow = Flow.from_client_secrets_file(
-#     GOOGLE_CLIENT_SECRETS_FILE,
-#     scopes=[
-#         "https://www.googleapis.com/auth/userinfo.profile",
-#         "https://www.googleapis.com/auth/userinfo.email",
-#         "openid",
-#     ],
-#     # redirect_uri="http://127.0.0.1:5000/google/callback"
-#     redirect_uri="https://life-decision-assistant.onrender.com/google/callback"
-# )
 
 # -------------------------------
 # USER DATABASE FUNCTIONS
@@ -83,9 +99,23 @@ def save_users(users):
     with open(USER_FILE, "w") as f:
         json.dump(users, f, indent=4)
 
-# -------------------------------
-# OPENROUTER AI FUNCTION
-# -------------------------------
+
+
+def save_history_sql(user, tool, user_input):
+
+    conn = sqlite3.connect("history.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO history(user, tool, input, time) VALUES(?,?,?,?)",
+        (user, tool, user_input, datetime.now().strftime("%d-%m-%Y %H:%M"))
+    )
+
+    conn.commit()
+    conn.close()
+
+
+
 # -------------------------------
 # AI FUNCTIONS
 # -------------------------------
@@ -190,15 +220,14 @@ def ask_gemini(prompt):
 # -------------------------------
 
 def ask_ai(prompt):
-
-    print("Trying GROQ AI...")
-    reply = ask_groq(prompt)
+    print("Trying OPENROUTER AI...")
+    reply = ask_openrouter(prompt)
 
     if reply:
         return reply
-
-    print("Trying OPENROUTER AI...")
-    reply = ask_openrouter(prompt)
+    
+    print("Trying GROQ AI...")
+    reply = ask_groq(prompt)
 
     if reply:
         return reply
@@ -331,12 +360,6 @@ def index():
     name = users.get(email, {}).get("name", "User")
 
     return render_template("index.html", name=name)
-# def index():
-#     if "user" not in session:
-#         return redirect(url_for("login"))
-#     users = load_users()
-#     name = users[session["user"]]["name"]
-#     return render_template("index.html", name=name)
 
 # -------------------------------
 # CAREER TOOL
@@ -396,7 +419,7 @@ Rules:
 """
 
     reply = ask_ai(prompt)
-
+    save_history_sql(session["user"], "Career Tool", f"{interest} | {skills}")
     return jsonify({"reply": reply})
 # -------------------------------
 # DECISION TOOL
@@ -446,7 +469,7 @@ Decision: Final recommendation with explanation.
 
         result = response.json()
         ai_reply = result["choices"][0]["message"]["content"]
-
+        save_history_sql(session["user"], "Decision Tool", situation)
         return jsonify({"reply": ai_reply})
 
     except Exception as e:
@@ -481,6 +504,7 @@ def goalplanner_api():
     """
 
     reply = ask_ai(prompt)
+    save_history_sql(session["user"], "Goal Planner", goal)
     return jsonify({"reply": reply})
 
 # -------------------------------
@@ -503,6 +527,7 @@ def skillgap_api():
     Suggest important skills to learn. Present the answer with bullets, emojis, and spaces for clarity.
     """
     reply = ask_ai(prompt)
+    save_history_sql(session["user"], "Skill Gap", f"Career: {career} | Skills: {skills}")
     return jsonify({"reply": reply})
 
 # -------------------------------
@@ -555,7 +580,7 @@ Rules:
 """
 
     reply = ask_ai(prompt)
-
+    save_history_sql(session["user"], "Comparison", f"A:{option1} | B:{option2}")
     return jsonify({"reply": reply})
 # -------------------------------
 # CHATBOT
@@ -573,7 +598,75 @@ def chatbot_api():
     data = request.get_json()
     message = data.get("message", "")
     reply = ask_ai(message)
+    save_history_sql(session["user"], "Chatbot", message)
     return jsonify({"reply": reply})
+
+@app.route("/history_test")
+def history_test():
+
+    if "history" not in session:
+        session["history"] = []
+
+    session["history"].append({
+        "tool": "Test",
+        "input": "Working"
+    })
+
+    session.modified = True
+
+    return "Saved"
+
+
+@app.route("/get_history")
+def get_history():
+
+    if "user" not in session:
+        return jsonify([])
+
+    conn = sqlite3.connect("history.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT tool, input, time FROM history WHERE user=? ORDER BY id DESC",
+        (session["user"],)
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    history = []
+
+    for row in rows:
+        history.append({
+            "tool": row[0],
+            "input": row[1],
+            "time": row[2]
+        })
+
+    return jsonify(history)
+
+@app.route("/clear_history", methods=["POST"])
+def clear_history():
+
+    if "user" not in session:
+        return jsonify({"status":"login required"})
+
+    conn = sqlite3.connect("history.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM history WHERE user=?",
+        (session["user"],)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status":"cleared"})
+
+@app.route("/history")
+def history():
+    return render_template("history.html")
 
 # -------------------------------
 # LOGOUT
